@@ -1,0 +1,30 @@
+{
+  "name": "crawlee-demo",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "npm run clean && npm run start:dev",
+    "start:prod": "node dist/main.js",
+    "start:dev": "ts-node-esm -T src/main.ts",
+    "test:fileutil": "ts-node-esm -T src/utils/fileutil.ts",
+    "build": "tsc",
+    "clean": "rm -rf storage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^18.11.7",
+    "crawlee": "^3.1.1",
+    "playwright": "^1.27.1",
+    "typescript": "^4.8.4",
+    "@apify/tsconfig": "^0.1.0",
+    "ts-node": "^10.8.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^0.27.0",
+    "@types/eslint": "^8.4.7",
+    "eslint": "8.22.0"
+  }
+}
