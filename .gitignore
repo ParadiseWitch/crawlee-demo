@@ -2,3 +2,4 @@ node_modules
 .vscode/settings.json
 storage
 dist
+.DS_Store

@@ -6,6 +6,7 @@ import { PlaywrightCrawler, ProxyConfiguration, createPlaywrightRouter } from 'c
 
 import type { Page } from 'playwright'
 import { getFiles, isExist, mkdir } from './utils/fileutil.js'
+import { download } from './utils/AxiosUtil.js'
 
 const host = 'https://www.copymanga.site'
 
@@ -34,7 +35,7 @@ export const spiderComicChapters = async (comicName: string) => {
     const chapterData = await getAllChapterData(page, log)
 
     // 章节url放入请求队列
-    await crawler.addRequests(chapterData.map((c) => {
+    await crawler.addRequests([chapterData[0]].map((c) => {
       return { url: c.url, label: 'CHAPTER' }
     }))
   })
@@ -90,14 +91,18 @@ export const spiderComicChapters = async (comicName: string) => {
       els => els.map(el => el.getAttribute('data-src') || ''),
     )
 
-    log.info(`imgs: ${imgs}`)
-
     // TODO添加图片到爬虫队列？或者直接下载
-    await crawler.addRequests(
-      imgs.filter(img => img).map((img) => {
-        return { url: img, label: 'CHAPTER' }
-      }),
-    )
+    // await crawler.addRequests(
+    //   imgs.filter(img => img).map((img) => {
+    //     return { url: img, label: 'CHAPTER' }
+    //   }),
+    // )
+    for (let i = 0; i < imgs.length; i++) {
+      const img = imgs[i]
+      // TODO重试 后缀
+      log.info(`正在下载第${i + 1}页`)
+      await download(img, `./caputer/${comicName}/${chapterName}/第${i + 1}页.png`)
+    }
   })
 
   // 保存章节数据
@@ -130,7 +135,6 @@ export const spiderComicChapters = async (comicName: string) => {
       host,
     )
 
-    log.info(`urlArr: ${chapterData.map(c => `${c.title}: ${c.url}`).join('\n')}`)
     log.info(`漫画《${comicTitle}》共有${chapterData.length}个章节`)
     allChapterAttrMap[comicName] = chapterData
     return chapterData
