@@ -1,12 +1,9 @@
-import path from 'path'
-import fs from 'fs'
-
 import type { Log } from 'crawlee'
 import { PlaywrightCrawler, ProxyConfiguration, createPlaywrightRouter } from 'crawlee'
 
 import type { Page } from 'playwright'
 import { getFiles, isExist, mkdir } from './utils/fileutil.js'
-import { download } from './utils/AxiosUtil.js'
+import download from './utils/download.js'
 
 const host = 'https://www.copymanga.site'
 
@@ -25,13 +22,16 @@ const proxyConfiguration = new ProxyConfiguration({
 
 const allChapterAttrMap: Record<string, ChapterData[]> = {}
 
-export const spiderComicChapters = async (comicName: string) => {
+export const spiderComicChapters = async (comicRouter: string) => {
+  let comicName: string = comicRouter
   // 路由
   const router = createPlaywrightRouter()
 
   // 漫画详情页路由
   router.addHandler('COMIC', async ({ request, page, log, crawler }) => {
     log.info(`加载url：${request.url}`)
+    await page.waitForSelector('h6[title]')
+    comicName = await page.locator('h6[title]').textContent() || comicRouter
     const chapterData = await getAllChapterData(page, log)
 
     // 章节url放入请求队列
@@ -40,7 +40,7 @@ export const spiderComicChapters = async (comicName: string) => {
     }))
   })
 
-  // 章节详情页路由，即每话的漫画页面 //TODO 待测试
+  // 章节详情页路由，即每话的漫画页面
   router.addHandler('CHAPTER', async ({ request, page, log }) => {
     // 获取章节名
     await page.waitForSelector('h4.header')
@@ -91,17 +91,18 @@ export const spiderComicChapters = async (comicName: string) => {
       els => els.map(el => el.getAttribute('data-src') || ''),
     )
 
-    // TODO添加图片到爬虫队列？或者直接下载
-    // await crawler.addRequests(
-    //   imgs.filter(img => img).map((img) => {
-    //     return { url: img, label: 'CHAPTER' }
-    //   }),
-    // )
     for (let i = 0; i < imgs.length; i++) {
       const img = imgs[i]
-      // TODO重试 后缀
-      log.info(`正在下载第${i + 1}页`)
-      await download(img, `./caputer/${comicName}/${chapterName}/第${i + 1}页.png`)
+      // TODO 下载
+      // 1. 重试
+      // 2. 取后缀
+      download(img, `./caputer/${comicName}/${chapterName}/第${i + 1}页.png`)
+        .then(() => {
+          log.info(`下载第${i + 1}页成功！`)
+        })
+        .catch((err) => {
+          log.error(`下载第${i + 1}页失败！`, err)
+        })
     }
   })
 
@@ -148,7 +149,7 @@ export const spiderComicChapters = async (comicName: string) => {
   })
 
   // 添加请求队列
-  const targetUrl = `${host}/comic/${comicName}`
+  const targetUrl = `${host}/comic/${comicRouter}`
   await crawler.addRequests([{
     url: targetUrl,
     label: 'COMIC',
