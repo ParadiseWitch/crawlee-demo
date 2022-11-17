@@ -4,6 +4,7 @@ import { PlaywrightCrawler, ProxyConfiguration, createPlaywrightRouter } from 'c
 import type { Page } from 'playwright'
 import { getFiles, isExist, mkdir } from './utils/fileutil.js'
 import download from './utils/download.js'
+import retry from './utils/retry.js'
 
 const host = 'https://www.copymanga.site'
 
@@ -93,16 +94,14 @@ export const spiderComicChapters = async (comicRouter: string) => {
 
     for (let i = 0; i < imgs.length; i++) {
       const img = imgs[i]
-      // TODO 下载
-      // 1. 重试
-      // 2. 取后缀
-      download(img, `./caputer/${comicName}/${chapterName}/第${i + 1}页.png`)
-        .then(() => {
-          log.info(`下载第${i + 1}页成功！`)
-        })
-        .catch((err) => {
-          log.error(`下载第${i + 1}页失败！`, err)
-        })
+      const ext = img.slice(img.lastIndexOf('.') + 1)
+      retry(async () => {
+        await download(img, `./caputer/${comicName}/${chapterName}/第${i + 1}页.${ext}`)
+      }).then(() => {
+        log.info(`下载第${i + 1}页成功！`)
+      }).catch((err) => {
+        log.error(`下载第${i + 1}页失败！`, err)
+      })
     }
   })
 
