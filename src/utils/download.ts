@@ -12,8 +12,6 @@ type OnProgressType = (opts: {
 
 const download = (url: string, path: string, onProgress?: OnProgressType): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const dirStrArr = path.split('/')
-    const fileName = dirStrArr[dirStrArr.length - 1]
     try {
       mkdir(path)
     }
