@@ -36,7 +36,7 @@ export const spiderComicChapters = async (comicRouter: string) => {
     const chapterData = await getAllChapterData(page, log)
 
     // 章节url放入请求队列
-    await crawler.addRequests([chapterData[0]].map((c) => {
+    await crawler.addRequests(chapterData.map((c) => {
       return { url: c.url, label: 'CHAPTER' }
     }))
   })
