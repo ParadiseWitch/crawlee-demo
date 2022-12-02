@@ -25,3 +25,7 @@ export const getFiles = (dirname: string): string[] => {
     throw new Error(`${dirname} 文件/文件夹不存在！`)
   return fs.readdirSync(dirname)
 }
+
+export const getSize = (filePath: string) => {
+  return fs.statSync(filePath).size
+}
